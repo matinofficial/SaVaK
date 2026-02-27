@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Powered by VPNMarket CMS | v1.0 -->
+<!-- Powered by {{ config('app.name') }} | v1.0 -->
 
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="rtl">
     <head>
@@ -8,6 +8,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+
+        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

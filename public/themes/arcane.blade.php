@@ -135,7 +135,7 @@
                 <p class="mb-0 text-muted small" style="opacity: 0.7;">
                     طراحی و توسعه توسط
                     <a href="https://t.me/VPNMarket_OfficialSupport" target="_blank" rel="noopener noreferrer" class="fw-bold text-decoration-none" style="color: var(--text-secondary, #adb5bd);">
-                        VPNMarket
+                        {{ config('app.name') }}
                     </a>
                 </p>
             </div>

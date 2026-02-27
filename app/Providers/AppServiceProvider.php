@@ -54,6 +54,18 @@ class AppServiceProvider extends ServiceProvider
             Log::warning("Failed to configure Telegram Proxy: " . $e->getMessage());
         }
 
+        // Set App Name from Settings
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                $brandName = \App\Models\Setting::where('key', 'auth_brand_name')->value('value');
+                if ($brandName) {
+                    config(['app.name' => $brandName]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore DB errors during setup
+        }
+
         // ==========================================================
     }
 }

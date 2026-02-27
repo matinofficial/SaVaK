@@ -44,7 +44,7 @@ class BackupService
         
         // Add --column-statistics=0 for MySQL 8 compatibility and --no-defaults to avoid auth issues
         $command = sprintf(
-            'mysqldump --no-defaults --column-statistics=0 --user="%s" %s --host="%s" --port="%s" "%s" > "%s"',
+            'mysqldump --no-defaults --column-statistics=0 --user="%s" %s --host="%s" --port="%s" "%s" > "%s" 2>&1',
             $dbConfig['username'],
             $passwordPart,
             $dbConfig['host'],
@@ -53,10 +53,17 @@ class BackupService
             $dumpFile
         );
         
+        if (!function_exists('exec')) {
+            throw new \Exception("Function exec() is disabled. Cannot create backup.");
+        }
+
+        $output = [];
+        $returnVar = 1;
         exec($command, $output, $returnVar);
         
         if ($returnVar !== 0) {
-            throw new \Exception("Database dump failed. Command: $command");
+            $errorOutput = implode("\n", $output);
+            throw new \Exception("Database dump failed. Exit code: $returnVar. Output: $errorOutput");
         }
 
         // 2. Zip Files

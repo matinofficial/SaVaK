@@ -10,11 +10,11 @@
                     class="block text-xl font-bold text-gray-950 dark:text-white"
                 >
 
-                    VPNMarket Project
+                    {{ config('app.name') }}
                 </a>
 
                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    نسخه 1.1.0 - پنل مدیریت هوشمند VPN
+                    نسخه 1.1.0 - پنل مدیریت هوشمند {{ config('app.name') }}
                 </p>
             </div>
 

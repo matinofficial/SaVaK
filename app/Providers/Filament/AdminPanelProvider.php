@@ -20,17 +20,33 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Nwidart\Modules\Facades\Module;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Schema;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $brandName = config('app.name');
+        try {
+            if (Schema::hasTable('settings')) {
+                $setting = Setting::where('key', 'auth_brand_name')->value('value');
+                if ($setting) {
+                    $brandName = $setting;
+                }
+            }
+        } catch (\Exception $e) {
+            //
+        }
+
         // تنظیمات اصلی پنل
         $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName($brandName)
+            ->favicon(asset('favicon.png'))
             ->colors([
                 'primary' => '#7C3AED',
                 'gray' => Color::Slate,

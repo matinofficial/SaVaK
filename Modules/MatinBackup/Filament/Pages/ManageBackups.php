@@ -200,29 +200,58 @@ class ManageBackups extends Page implements HasActions
 
         // 1. Restore Database
         $sqlFile = $tempDir . DIRECTORY_SEPARATOR . 'database.sql';
-        if (File::exists($sqlFile)) {
-            $dbConfig = config('database.connections.mysql');
-            $passwordPart = !empty($dbConfig['password']) ? "-p\"{$dbConfig['password']}\"" : "";
-            
-            // Fix paths for Windows
-            $sqlFile = str_replace('/', DIRECTORY_SEPARATOR, $sqlFile);
-
-            $command = sprintf(
-                'mysql --no-defaults --user="%s" %s --host="%s" --port="%s" "%s" < "%s" 2>&1',
-                $dbConfig['username'],
-                $passwordPart,
-                $dbConfig['host'],
-                $dbConfig['port'],
-                $dbConfig['database'],
-                $sqlFile
-            );
-            
-            exec($command, $output, $returnVar);
-            
-            if ($returnVar !== 0) {
-                $errorOutput = implode("\n", $output);
-                throw new \Exception("Database restore failed. Exit code: $returnVar. Output: $errorOutput");
+        
+        if (!File::exists($sqlFile)) {
+            // Try to find any .sql file
+            $files = scandir($tempDir);
+            $sqlFiles = [];
+            foreach ($files as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'sql') {
+                    $sqlFiles[] = $file;
+                }
             }
+
+            if (count($sqlFiles) > 0) {
+                $sqlFile = $tempDir . DIRECTORY_SEPARATOR . $sqlFiles[0];
+            } else {
+                $filesList = array_diff($files, ['.', '..']);
+                throw new \Exception("فایل database.sql یا هیچ فایل sql دیگری در فایل فشرده یافت نشد. فایل‌های موجود: " . implode(', ', $filesList));
+            }
+        }
+
+        if (filesize($sqlFile) === 0) {
+            throw new \Exception("فایل database.sql خالی است. احتمالاً بکاپ‌گیری به درستی انجام نشده است.");
+        }
+
+        $dbConfig = config('database.connections.mysql');
+        $passwordPart = !empty($dbConfig['password']) ? "-p\"{$dbConfig['password']}\"" : "";
+        
+        // Fix paths for Windows
+        $sqlFile = str_replace('/', DIRECTORY_SEPARATOR, $sqlFile);
+
+        $command = sprintf(
+            'mysql --no-defaults --user="%s" %s --host="%s" --port="%s" "%s" < "%s" 2>&1',
+            $dbConfig['username'],
+            $passwordPart,
+            $dbConfig['host'],
+            $dbConfig['port'],
+            $dbConfig['database'],
+            $sqlFile
+        );
+        
+        if (!function_exists('exec')) {
+            throw new \Exception("تابع exec در سرور غیرفعال است. امکان بازگردانی دیتابیس وجود ندارد.");
+        }
+
+        $output = [];
+        $returnVar = 1; // Initialize to non-zero to detect execution failure
+        exec($command, $output, $returnVar);
+        
+        if ($returnVar !== 0) {
+            $errorOutput = implode("\n", $output);
+            // Mask password in error message
+            $maskedCommand = str_replace($dbConfig['password'], '********', $command);
+            throw new \Exception("بازگردانی دیتابیس با خطا مواجه شد. کد خروج: $returnVar. خروجی: $errorOutput");
         }
 
         // 2. Restore Public Storage
